@@ -1,0 +1,241 @@
+:root {
+  --bg-color: #191a1a;
+  --text-primary: #e8e8e6;
+  --text-secondary: #8d8d8d;
+  --accent-color: #539eaa;
+  --accent-hover: #5095a2;
+  --divider-color: #333333;
+  --hover-bg: #222222;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+body {
+  font-family: Söhne, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif, Helvetica Neue, Arial, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  width: 320px;
+  font-size: 14px;
+}
+
+.container {
+  padding: 20px 20px 26px 20px;
+}
+
+/* Header */
+.main-header {
+  margin-bottom: 16px;
+  padding: 6px 4px;
+}
+
+.main-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.main-header h1 span {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border: 1px solid var(--divider-color);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 0;
+  line-height: normal;
+}
+
+.logo-img {
+  height: 24px;
+  width: auto;
+  display: block;
+}
+
+/* Tabs Navigation */
+.tabs-nav {
+  display: flex;
+  margin-bottom: 16px;
+  background-color: var(--hover-bg);
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.tab-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  padding: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  background-color: #333;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Tab Content */
+.tab-content {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tab-content.active {
+  display: flex;
+}
+
+/* Settings Row */
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: #1f2121;
+  border: 1px solid #2a2a2a;
+}
+
+.setting-row:hover {
+  background-color: var(--hover-bg);
+  border-color: #444;
+}
+
+.row-icon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+}
+
+.setting-row:hover .row-icon {
+  color: var(--text-primary);
+}
+
+.setting-row:last-child {
+  margin-bottom: 0;
+}
+
+.text-content {
+  flex: 1;
+  padding-right: 16px;
+}
+
+.title {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  font-weight: 400;
+}
+
+.desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Custom Toggle */
+.control {
+  position: relative;
+}
+
+.control input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-switch {
+  display: block;
+  width: 44px;
+  height: 24px;
+  background-color: #3f3f3f;
+  border-radius: 99px;
+  position: relative;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+input:checked+.toggle-switch {
+  background-color: var(--accent-color);
+}
+
+input:checked+.toggle-switch::after {
+  transform: translateX(20px);
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background-color: var(--divider-color);
+  margin: 32px 0;
+}
+
+/* Footer */
+.footer-info {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--divider-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.footer-info a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.footer-info a:hover {
+  text-decoration: underline;
+}
+
+/* Disable transitions during initial load */
+.no-transition .toggle-switch,
+.no-transition .toggle-switch::after {
+  transition: none !important;
+}
+
+/* Version Link Special Styling */
+a.setting-row {
+  text-decoration: none;
+  color: inherit;
+}
+
+a.setting-row:visited {
+  color: inherit;
+}
+
+#tab-more {
+  padding-bottom: 4px;
+}

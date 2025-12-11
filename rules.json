@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "*://www.perplexity.ai/rest/event/analytics*",
+      "resourceTypes": [
+        "xmlhttprequest",
+        "other",
+        "ping"
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "*://browser-intake-datadoghq.com/*",
+      "resourceTypes": [
+        "xmlhttprequest",
+        "other",
+        "ping"
+      ]
+    }
+  },
+  {
+    "id": 3,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "*://sdk-api-v1.singular.net/*",
+      "resourceTypes": [
+        "xmlhttprequest",
+        "other",
+        "ping"
+      ]
+    }
+  }
+]
