@@ -260,6 +260,23 @@
         }
     }
 
+    // ========== 404 跳转首页 ==========
+
+    function init404Redirect() {
+        function check404() {
+            if (document.body?.innerText?.trim() === 'Not Found') {
+                console.log('[Helper] 检测到 404，跳转首页');
+                location.href = 'https://www.perplexity.ai/';
+            }
+        }
+
+        if (document.readyState === 'complete') {
+            check404();
+        } else {
+            window.addEventListener('load', check404, { once: true });
+        }
+    }
+
     // ========== 自动跳转验证 ==========
 
     function initAutoRedirect() {
@@ -433,6 +450,7 @@
 
         if (settings.autoRedirect) {
             initAutoRedirect();
+            init404Redirect();
         }
 
         if (settings.keepalive) {
