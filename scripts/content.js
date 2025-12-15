@@ -64,6 +64,10 @@
         return VERIFY_TITLES.some(t => document.title.includes(t));
     }
 
+    function isAuthPage() {
+        return location.pathname.startsWith('/auth');
+    }
+
     function isVerificationSuccess() {
         if (!needsVerification()) return true;
 
@@ -79,47 +83,59 @@
     // ========== 自动验证 ==========
 
     function findChallengeElement() {
+        // 1. 尝试直接查找 iframe（旧版结构，iframe 不在 shadow-root 内）
         const iframeSelectors = [
             'iframe[src*="challenges.cloudflare.com"]',
             'iframe[src*="turnstile"]',
-            'iframe[title*="Cloudflare"]',
-            'iframe[title*="cloudflare"]',
-            'iframe[id*="cf-"]',
             'iframe[id*="cf-chl"]'
         ];
 
         for (const selector of iframeSelectors) {
             const iframe = document.querySelector(selector);
-            if (iframe) return iframe;
-        }
-
-        const divSelectors = [
-            'div[id^="cf-turnstile"]',
-            'div[class*="cf-turnstile"]',
-            'div[id^="tgnx"]',
-            'div[id^="challenge"]'
-        ];
-
-        for (const selector of divSelectors) {
-            const div = document.querySelector(selector);
-            if (div) {
-                const innerIframe = div.querySelector('iframe');
-                if (innerIframe) return innerIframe;
-                return div;
-            }
-        }
-
-        const allIframes = document.querySelectorAll('iframe');
-        for (const iframe of allIframes) {
-            const src = iframe.src || '';
-            const title = iframe.title || '';
-            const id = iframe.id || '';
-            if (src.includes('cloudflare') || src.includes('turnstile') ||
-                title.toLowerCase().includes('cloudflare') || id.includes('cf-')) {
+            if (iframe && iframe.offsetWidth > 0) {
                 return iframe;
             }
         }
 
+        // 2. 新版结构：查找包含 shadow-root 的外层容器
+        // 特征：display: grid，高度约 65px，位于页面可视区域
+        const allDivs = document.querySelectorAll('div[style*="display: grid"]');
+        for (const div of allDivs) {
+            const rect = div.getBoundingClientRect();
+            // 验证框容器高度 ~65px，宽度可变
+            if (rect.height > 30 && rect.height < 120 &&
+                rect.top > 0 && rect.width > 100) {
+                console.debug('[Helper] 通过 display:grid 找到容器', rect.width, rect.height);
+                return div;
+            }
+        }
+
+        // 3. 查找 turnstile 相关的 div 容器
+        const divSelectors = [
+            'div[id^="cf-turnstile"]',
+            'div[class*="cf-turnstile"]',
+            'div[class*="turnstile"]'
+        ];
+
+        for (const selector of divSelectors) {
+            const div = document.querySelector(selector);
+            if (div && div.offsetWidth > 0) {
+                console.debug('[Helper] 通过选择器找到容器:', selector);
+                return div;
+            }
+        }
+
+        // 4. 通过 turnstile response input 定位（如果存在）
+        const turnstileInput = document.querySelector('input[name="cf-turnstile-response"]');
+        if (turnstileInput) {
+            const container = turnstileInput.previousElementSibling;
+            if (container && container.offsetWidth > 0) {
+                console.debug('[Helper] 通过 turnstile input 找到容器');
+                return container;
+            }
+        }
+
+        console.debug('[Helper] 未找到验证元素');
         return null;
     }
 
@@ -263,7 +279,7 @@
         }
 
         async function checkCFBlock() {
-            if (needsVerification()) return;
+            if (needsVerification() || isAuthPage()) return;
 
             const version = await getApiVersion();
 
@@ -316,7 +332,7 @@
         }
 
         function start() {
-            if (needsVerification()) return;
+            if (needsVerification() || isAuthPage()) return;
             setInterval(sendPing, KEEPALIVE_INTERVAL);
             console.debug('[Helper] Keepalive started');
         }
