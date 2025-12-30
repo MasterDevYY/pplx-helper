@@ -3,7 +3,7 @@
  */
 
 const SETTINGS = {
-    keys: ['autoVerify', 'autoRedirect', 'keepalive', 'optimizeUI', 'privacyProtect', 'hotSearch', 'wideScreen'],
+    keys: ['autoVerify', 'autoRedirect', 'keepalive', 'optimizeUI', 'privacyProtect', 'hotSearch', 'wideScreen', 'downgradeCheck'],
     defaults: {
         autoVerify: true,
         autoRedirect: true,
@@ -11,7 +11,8 @@ const SETTINGS = {
         optimizeUI: true,
         privacyProtect: true,
         hotSearch: false,
-        wideScreen: false
+        wideScreen: false,
+        downgradeCheck: false
     }
 };
 

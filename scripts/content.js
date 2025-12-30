@@ -14,8 +14,18 @@
         optimizeUI: true,
         privacyProtect: true,
         hotSearch: false,
-        wideScreen: false
+        wideScreen: false,
+        downgradeCheck: false
     };
+
+    // ... (lines 20-438 unchanged, handled by context matching but here I'm replacing a larger block or just the specific parts if I can.
+    // Actually, I should use separate replacements or a larger block.
+    // For Safety, I will replace the DEFAULT_SETTINGS block first.
+
+    // Wait, I can do multi_replace if needed, or just replace the function that uses it.
+    // I need to update DEFAULT_SETTINGS (line 10) AND initInjectSettings (line 440) AND the calling site (line 449).
+    // Let's use multi_replace.
+
 
     const VERIFY_TITLES = ['请稍候', '請稍候', 'Just a moment'];
     const SUCCESS_KEYWORDS = ['成功', 'success'];
@@ -396,6 +406,10 @@
                 .mt-lg.absolute.w-full:has(.animate-in.fade-in) {
                     display: none !important;
                 }
+                /* 隐藏右下角悬浮按钮（语言、帮助） */
+                .fixed.bottom-md.right-md {
+                    display: none !important;
+                }
             `;
             document.head.appendChild(style);
         }
@@ -417,8 +431,8 @@
                 /* 移除内容区域宽度限制 */
                 .max-w-threadContentWidth {
                     max-width: none !important;
-                    padding-left: 5vw !important;
-                    padding-right: 5vw !important;
+                    padding-left: 6.5vw !important;
+                    padding-right: 6.5vw !important;
                 }
             `;
             document.head.appendChild(style);
@@ -433,16 +447,16 @@
 
     // ========== 模块：隐私保护、热门搜索 ==========
 
-    function initInjectSettings(privacyProtect, hotSearch) {
+    function initInjectSettings(privacyProtect, hotSearch, downgradeCheck) {
         // 向页面发送设置给 inject.js
-        window.postMessage({ type: 'PPLX_SETTINGS', privacyProtect, hotSearch }, '*');
+        window.postMessage({ type: 'PPLX_SETTINGS', privacyProtect, hotSearch, downgradeCheck }, '*');
     }
 
     // ========== 插件配置 ==========
 
     chrome.storage.sync.get(DEFAULT_SETTINGS, (settings) => {
         // 传递设置给 inject.js
-        initInjectSettings(settings.privacyProtect, settings.hotSearch);
+        initInjectSettings(settings.privacyProtect, settings.hotSearch, settings.downgradeCheck);
 
         if (settings.autoVerify) {
             initAutoVerify();

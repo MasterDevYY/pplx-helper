@@ -7,6 +7,7 @@
 
     let privacyProtectEnabled = true; // 隐私保护
     let hotSearchEnabled = false; // 热门搜索
+    let downgradeCheckEnabled = false; // 降智检测
 
     // 监听来自 content.js 的设置
     window.addEventListener('message', (event) => {
@@ -14,6 +15,7 @@
         if (event.data?.type === 'PPLX_SETTINGS') {
             privacyProtectEnabled = event.data.privacyProtect;
             hotSearchEnabled = event.data.hotSearch;
+            downgradeCheckEnabled = event.data.downgradeCheck;
         }
     });
 
@@ -73,6 +75,132 @@
             return new Response(JSON.stringify({ status: 'ok' }), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        // Hook SSE 流式响应 - perplexity_ask
+        if (url.includes('/rest/sse/perplexity_ask')) {
+
+            // ================= 修复请求参数开始 =================
+            try {
+
+                if (init && typeof init.body === 'string') {
+                    const bodyObj = JSON.parse(init.body);
+                    
+                    if (bodyObj && bodyObj.params) {
+                        let modified = false;
+                        // 1. 核心修复：将 source 从 "default" 改为 "entropy"
+                        if (bodyObj.params.source === 'default') {
+                            bodyObj.params.source = 'entropy';
+                            modified = true;
+                        }
+                        // // 2. 修复搜索能力：开启 local_search_enabled
+                        // if (bodyObj.params.local_search_enabled === false) {
+                        //     bodyObj.params.local_search_enabled = true;
+                        //     modified = true;
+                        // }
+                        // 3. 添加 comet_info，伪装成comet浏览器
+                        // if (!bodyObj.params.comet_info) {
+                        //     bodyObj.params.comet_info = {
+                        //         "rendering_place": "tab"
+                        //     };
+                        //     modified = true;
+                        // }
+                        // 如果有修改，重新序列化 body
+                        if (modified) {
+                            init.body = JSON.stringify(bodyObj);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('perplexity_ask 修改请求参数失败', e);
+            }
+            // ================= 修复请求参数结束 =================
+
+            const response = await originalFetch.call(this, input, init);
+            
+            if (!downgradeCheckEnabled) {
+                return response;
+            }
+            
+            // 检查是否是 SSE 响应
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('text/event-stream')) {
+                return response;
+            }
+
+            // 创建 TransformStream 来处理流式数据
+            let buffer = '';
+            const decoder = new TextDecoder();
+            const encoder = new TextEncoder();
+
+            const transformStream = new TransformStream({
+                transform(chunk, controller) {
+                    const text = decoder.decode(chunk, { stream: true });
+                    buffer += text;
+
+                    const lines = buffer.split('\n');
+                    // Keep the last part in the buffer as it might be incomplete
+                    buffer = lines.pop();
+
+                    if (lines.length === 0) {
+                        return;
+                    }
+
+                    const modifiedLines = lines.map(line => {
+                        if (!line.startsWith('data: ')) return line;
+
+                        const jsonStr = line.slice(6); // Remove "data: "
+                        if (!jsonStr.trim()) return line;
+
+                        try {
+                            const data = JSON.parse(jsonStr);
+
+                            // Only process final messages
+                            if (!data.final_sse_message || !data.user_selected_model || !data.display_model) {
+                                return line;
+                            }
+
+                            // Condition: user_selected_model !== "best" and display_model !== user_selected_model
+                            if (data.user_selected_model === 'best' ||
+                                data.display_model === data.user_selected_model) {
+                                return line;
+                            }
+
+                            // Modify blocks array
+                            // Compose warning message with model IDs
+                            const warningMessage = `## **Fucking Perplexity** \n\n&nbsp;\n你选择的 \`${data.user_selected_model}\` 模型被降级到了 \`${data.display_model}\`，点击 **重写** 恢复正常`;
+
+                            if (Array.isArray(data.blocks)) {
+                                for (const block of data.blocks) {
+                                    if ((block.intended_usage === 'ask_text_0_markdown' || block.intended_usage === 'ask_text') && block.markdown_block) {
+                                        block.markdown_block.answer = warningMessage;
+                                        block.markdown_block.chunks = [warningMessage];
+                                    }
+                                }
+                            }
+
+                            return 'data: ' + JSON.stringify(data);
+                        } catch (e) {
+                            return line;
+                        }
+                    });
+
+                    // Add the newline back that was removed by split
+                    controller.enqueue(encoder.encode(modifiedLines.join('\n') + '\n'));
+                },
+                flush(controller) {
+                    if (buffer) {
+                        controller.enqueue(encoder.encode(buffer));
+                    }
+                }
+            });
+
+            // 返回新的 Response，带有修改后的流
+            return new Response(response.body.pipeThrough(transformStream), {
+                status: response.status,
+                statusText: response.statusText,
+                headers: response.headers
             });
         }
 
