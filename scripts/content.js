@@ -290,39 +290,18 @@
     // ========== 自动跳转验证 ==========
 
     function initAutoRedirect() {
-
-        const RELOAD_COOLDOWN = 5000; // 5秒冷却
-        const RELOAD_KEY = 'pplx_last_reload';
-
-        function canReload() {
-            const last = sessionStorage.getItem(RELOAD_KEY);
-            if (!last) return true;
-            return Date.now() - parseInt(last, 10) > RELOAD_COOLDOWN;
-        }
-
-        function doReload() {
-            sessionStorage.setItem(RELOAD_KEY, Date.now().toString());
-            location.reload();
-        }
-
         async function checkCFBlock() {
             if (needsVerification() || isAuthPage()) return;
 
             const version = await getApiVersion();
 
-            // 使用 ping 接口检测
+            // 发送 ping 请求触发 CF 检测（403 处理由 inject.js 完成）
             fetch(`https://www.perplexity.ai/rest/ping?version=${version}&source=default`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
                     'x-app-apiclient': 'default',
                     'x-app-apiversion': version
-                }
-            }).then(response => {
-                console.debug('[Helper] ping 状态码', response.status);
-                if (response.status === 403 && canReload()) {
-                    console.log('[Helper] 检测到 CF 拦截，刷新页面');
-                    doReload();
                 }
             }).catch(() => { });
         }
@@ -410,6 +389,13 @@
                 .fixed.bottom-md.right-md {
                     display: none !important;
                 }
+                /* 隐藏分享按钮 */
+                .pr-md .gap-x-sm.flex > div.transition-all:has(use[*|href="#pplx-icon-share-3"]) {
+                    width: 0 !important;
+                    overflow: hidden !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                }
             `;
             document.head.appendChild(style);
         }
@@ -419,6 +405,101 @@
         } else {
             document.addEventListener('DOMContentLoaded', injectHideStyles);
         }
+
+        // 在"更多"菜单中注入分享选项
+        function injectShareMenuItem() {
+            function createShareItem(templateItem, isMobile) {
+                const shareItem = document.createElement(isMobile ? 'button' : 'div');
+                if (!isMobile) shareItem.setAttribute('role', 'menuitem');
+                shareItem.setAttribute('data-share-injected', 'true');
+                shareItem.className = templateItem.className;
+                shareItem.setAttribute('tabindex', isMobile ? '0' : '-1');
+                if (isMobile) shareItem.setAttribute('type', 'button');
+
+                const iconSize = isMobile ? '18' : '16';
+                shareItem.innerHTML = `
+                    <div class="flex-1 grid grid-cols-[auto_1fr_auto] items-center gap-y-0.5 gap-x-[10px] md:gap-x-sm">
+                        <div class="flex shrink-0 items-center">
+                            <svg role="img" class="inline-flex fill-current" width="${iconSize}" height="${iconSize}">
+                                <use xlink:href="#pplx-icon-share-3"></use>
+                            </svg>
+                        </div>
+                        <div class="col-start-2">分享</div>
+                    </div>
+                `;
+
+                shareItem.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // 关闭菜单/对话框
+                    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+                    // 等待关闭后打开分享
+                    setTimeout(() => {
+                        // 移除所有按钮的 focus 避免 tooltip
+                        document.activeElement?.blur();
+
+                        const isMobile = window.innerWidth < 768;
+                        let shareBtn;
+
+                        if (isMobile) {
+                            // 移动端：寻找小图标分享按钮 (aria-label="分享" 或者工具栏中的分享按钮)
+                            shareBtn = document.querySelector('button[aria-label="分享"]:has(use[*|href="#pplx-icon-share-3"])');
+                        } else {
+                            // 桌面端：寻找绿色背景的分享按钮
+                            shareBtn = document.querySelector('button.bg-super:has(use[*|href="#pplx-icon-share-3"])');
+                        }
+
+                        if (shareBtn) {
+                            shareBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                        }
+                    }, 200);
+                });
+
+                return shareItem;
+            }
+
+            const observer = new MutationObserver((mutations) => {
+                for (const mutation of mutations) {
+                    for (const node of mutation.addedNodes) {
+                        if (node.nodeType !== 1) continue;
+
+                        // 桌面端下拉菜单
+                        if (node.matches('[data-radix-popper-content-wrapper]')) {
+                            const menu = node.querySelector('[role="menu"]');
+                            if (!menu || menu.querySelector('[data-share-injected]')) continue;
+
+                            const docxItem = Array.from(menu.querySelectorAll('[role="menuitem"]'))
+                                .find(item => item.textContent.includes('DOCX'));
+
+                            if (docxItem) {
+                                const shareItem = createShareItem(docxItem, false);
+                                docxItem.parentNode.insertBefore(shareItem, docxItem.nextSibling);
+                            }
+                        }
+
+                        // 移动端对话框
+                        if (node.matches('[role="dialog"]') || node.querySelector?.('[role="dialog"]')) {
+                            const dialog = node.matches('[role="dialog"]') ? node : node.querySelector('[role="dialog"]');
+                            if (!dialog || dialog.querySelector('[data-share-injected]')) continue;
+
+                            const docxItem = Array.from(dialog.querySelectorAll('button'))
+                                .find(item => item.textContent.includes('DOCX'));
+
+                            if (docxItem) {
+                                const shareItem = createShareItem(docxItem, true);
+                                docxItem.parentNode.insertBefore(shareItem, docxItem.nextSibling);
+                            }
+                        }
+                    }
+                }
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+
+        injectShareMenuItem();
     }
 
     // ========== 宽屏模式 ==========
@@ -428,11 +509,15 @@
             const style = document.createElement('style');
             style.id = 'pplx-widescreen';
             style.textContent = `
-                /* 移除内容区域宽度限制 */
+                /* 移除内容区域宽度限制 - 只作用于第一层 */
                 .max-w-threadContentWidth {
                     max-width: none !important;
-                    padding-left: 6.5vw !important;
-                    padding-right: 6.5vw !important;
+                }
+                
+                /* padding 只应用于第一层（非嵌套） */
+                .max-w-threadContentWidth:not(.max-w-threadContentWidth .max-w-threadContentWidth) {
+                    padding-left: 8vw !important;
+                    padding-right: 8vw !important;
                 }
             `;
             document.head.appendChild(style);

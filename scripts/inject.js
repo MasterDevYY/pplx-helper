@@ -77,7 +77,26 @@
                 headers: { 'Content-Type': 'application/json' }
             });
         }
+        // 403 检测 - /rest/* (排除 perplexity_ask)
+        if (url.includes('/rest/') && !url.includes('/rest/sse/perplexity_ask')) {
+            const response = await originalFetch.call(this, input, init);
 
+            // 检测 403 并触发刷新（使用冷却机制防止循环刷新）
+            if (response.status === 403) {
+                const RELOAD_COOLDOWN = 5000;
+                const RELOAD_KEY = 'pplx_last_reload';
+                const last = sessionStorage.getItem(RELOAD_KEY);
+                const canReload = !last || (Date.now() - parseInt(last, 10) > RELOAD_COOLDOWN);
+
+                if (canReload) {
+                    console.log('[Inject] 检测到 /rest/ 403，刷新页面');
+                    sessionStorage.setItem(RELOAD_KEY, Date.now().toString());
+                    location.reload();
+                }
+            }
+
+            return response;
+        }
         // Hook SSE 流式响应 - perplexity_ask
         if (url.includes('/rest/sse/perplexity_ask')) {
 
@@ -161,15 +180,16 @@
                                 return line;
                             }
 
-                            // Condition: user_selected_model !== "best" and display_model !== user_selected_model
                             if (data.user_selected_model === 'best' ||
+                                data.user_selected_model === 'turbo' ||
+                                data.user_selected_model === 'pplx_pro' ||
                                 data.display_model === data.user_selected_model) {
                                 return line;
                             }
 
                             // Modify blocks array
                             // Compose warning message with model IDs
-                            const warningMessage = `## **Fucking Perplexity** \n\n&nbsp;\n你选择的 \`${data.user_selected_model}\` 模型被降级到了 \`${data.display_model}\`，点击 **重写** 恢复正常`;
+                            const warningMessage = `## **Fucking Perplexity** \n\n&nbsp;\n你选择的 \`${data.user_selected_model}\` 模型被换成了 \`${data.display_model}\`，点击 **重写** 再试一次`;
 
                             if (Array.isArray(data.blocks)) {
                                 for (const block of data.blocks) {
