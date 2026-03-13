@@ -386,6 +386,10 @@
                 .h-bannerHeight:has(use[*|href="#pplx-icon-sparkles"]) {
                     display: none !important;
                 }
+                /* 隐藏输入框上方推广横幅（Computer、浏览器等） */
+                .max-w-threadContentWidth .mb-md.rounded-2xl.shadow-xl.bg-raised {
+                    display: none !important;
+                }
                 /* 隐藏输入框下方的快捷按钮（分析、总结等） */
                 .mt-lg.absolute.w-full:has(.animate-in.fade-in) {
                     display: none !important;
