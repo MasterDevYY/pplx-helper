@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Perplexity 助手",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "description": "自动验证、会话保活、隐私保护、界面精简，还原纯净的使用体验。",
   "permissions": [
     "debugger",

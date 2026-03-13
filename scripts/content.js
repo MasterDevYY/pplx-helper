@@ -365,12 +365,17 @@
                     display: none !important;
                 }
                 /* 隐藏安装按钮的父容器 */
-                .gap-xs.flex.flex-col.items-center:has(use[*|href="#pplx-icon-download"]) {
+                .gap-xs.flex.flex-col.items-center:has(use[*|href="#pplx-icon-download"]),
+                .gap-xs.inline-flex.flex-col.items-center:has(use[*|href="#pplx-icon-download"]) {
                     display: none !important;
                 }
-                /* 隐藏 Logo（保留占位） */
-                a[href="/"] use[href="#pplx-logo-mark"] {
-                    visibility: hidden !important;
+                /* 隐藏侧边栏顶部搜索/Computer切换区域 */
+                nav > div > .flex-none.flex-col:first-child {
+                    display: none !important;
+                }
+                /* 侧边栏内容区顶部补高度，与右侧标题栏对齐 */
+                nav > div > .min-h-0.flex-1.flex-col {
+                    padding-top: var(--spacing-headerHeight, 54px) !important;
                 }
                 /* 侧边栏按钮区域垂直居中 */
                 .scrollbar-none.relative.min-h-0.w-full.flex-1.overflow-y-auto {
@@ -390,7 +395,7 @@
                     display: none !important;
                 }
                 /* 隐藏分享按钮 */
-                .pr-md .gap-x-sm.flex > div.transition-all:has(use[*|href="#pplx-icon-share-3"]) {
+                .pr-md .gap-x-sm.flex > div.transition-all:has(use[*|href="#pplx-icon-lock"]) {
                     width: 0 !important;
                     overflow: hidden !important;
                     opacity: 0 !important;
@@ -417,14 +422,19 @@
                 if (isMobile) shareItem.setAttribute('type', 'button');
 
                 const iconSize = isMobile ? '18' : '16';
+                const iconMargin = isMobile ? 'mr-[10px] md:mr-sm' : 'mr-sm';
                 shareItem.innerHTML = `
-                    <div class="flex-1 grid grid-cols-[auto_1fr_auto] items-center gap-y-0.5 gap-x-[10px] md:gap-x-sm">
-                        <div class="flex shrink-0 items-center">
-                            <svg role="img" class="inline-flex fill-current" width="${iconSize}" height="${iconSize}">
+                    <div class="flex-1 grid grid-cols-[auto_1fr_auto] gap-y-0.5 items-center">
+                        <div class="empty:hidden flex shrink-0 items-center ${iconMargin}">
+                            <svg role="img" class="inline-flex fill-current shrink-0" width="${iconSize}" height="${iconSize}">
                                 <use xlink:href="#pplx-icon-share-3"></use>
                             </svg>
                         </div>
-                        <div class="col-start-2">分享</div>
+                        <div class="col-start-2 min-w-0">
+                            <div class="flex items-center gap-1">
+                                <div class="min-w-0">分享</div>
+                            </div>
+                        </div>
                     </div>
                 `;
 
@@ -445,10 +455,10 @@
 
                         if (isMobile) {
                             // 移动端：寻找小图标分享按钮 (aria-label="分享" 或者工具栏中的分享按钮)
-                            shareBtn = document.querySelector('button[aria-label="分享"]:has(use[*|href="#pplx-icon-share-3"])');
+                            shareBtn = document.querySelector('button[aria-label="分享"]:has(use[*|href="#pplx-icon-lock"])');
                         } else {
-                            // 桌面端：寻找绿色背景的分享按钮
-                            shareBtn = document.querySelector('button.bg-super:has(use[*|href="#pplx-icon-share-3"])');
+                            // 桌面端：寻找分享按钮
+                            shareBtn = document.querySelector('.pr-md button.bg-button-bg:has(use[*|href="#pplx-icon-lock"])');
                         }
 
                         if (shareBtn) {
