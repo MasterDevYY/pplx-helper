@@ -390,8 +390,13 @@
                 .max-w-threadContentWidth .mb-md.rounded-2xl.shadow-xl.bg-raised {
                     display: none !important;
                 }
-                /* 隐藏输入框下方的快捷按钮（分析、总结等） */
-                .mt-lg.absolute.w-full:has(.animate-in.fade-in) {
+                /* 隐藏输入框下方的快捷按钮及其骨架屏（分析、总结等） */
+                .mt-lg.absolute.w-full:has(.animate-in.fade-in),
+                .mt-lg.absolute.w-full:has(.animate-pulse) {
+                    display: none !important;
+                }
+                /* 隐藏搜索框内Computer推广按钮 */
+                .inline-flex.-mx-sm:has(use[*|href="#pplx-icon-custom-computer"]) {
                     display: none !important;
                 }
                 /* 隐藏右下角悬浮按钮（语言、帮助） */

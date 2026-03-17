@@ -42,6 +42,18 @@
             });
         }
 
+        // Hook 首页推广组件 - 返回空结果
+        if (!hotSearchEnabled && url.includes('/rest/homepage-widgets')) {
+            return new Response(JSON.stringify({
+                widgets: [],
+                enabled_widgets: [],
+                all_widgets: []
+            }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
         // 如果隐私保护关闭，放行其余请求
         if (!privacyProtectEnabled) {
             return originalFetch.call(this, input, init);
