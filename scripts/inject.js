@@ -59,6 +59,16 @@
             return originalFetch.call(this, input, init);
         }
 
+        // verification
+        if (url.includes('phone-verification/status')) {
+            return new Response(JSON.stringify({
+                requires_verification: false
+            }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
         // Hook Perplexity Analytics
         if (url.includes('/rest/event/analytics')) {
             return new Response(JSON.stringify({

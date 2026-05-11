@@ -373,15 +373,15 @@
                 nav > div > .flex-none.flex-col:first-child {
                     display: none !important;
                 }
-                /* 侧边栏内容区顶部补高度，与右侧标题栏对齐 */
-                nav > div > .min-h-0.flex-1.flex-col {
-                    padding-top: var(--spacing-headerHeight, 54px) !important;
-                }
-                /* 侧边栏按钮区域垂直居中 */
-                .scrollbar-none.relative.min-h-0.w-full.flex-1.overflow-y-auto {
-                    flex: 0 1 auto !important;
-                    margin: auto 0 !important;
-                }
+                // /* 侧边栏内容区顶部补高度，与右侧标题栏对齐 */
+                // nav > div > .min-h-0.flex-1.flex-col {
+                //     padding-top: var(--spacing-headerHeight, 54px) !important;
+                // }
+                // /* 侧边栏按钮区域垂直居中 */
+                // .scrollbar-none.relative.min-h-0.w-full.flex-1.overflow-y-auto {
+                //     flex: 0 1 auto !important;
+                //     margin: auto 0 !important;
+                // }
                 /* 隐藏广告横幅 */
                 .h-bannerHeight:has(use[*|href="#pplx-icon-sparkles"]) {
                     display: none !important;
@@ -403,8 +403,29 @@
                 .fixed.bottom-md.right-md {
                     display: none !important;
                 }
+                /* 隐藏顶部导航栏（发现、金融、健康等） */
+                .top-0.h-headerHeight.inset-x-0.z-20.absolute:has(a[href="/discover"]) {
+                    display: none !important;
+                }
+                /* 隐藏Computer圆形按钮 */
+                .inline-flex.flex-none.rounded-full:has(button[aria-label="Computer"]) {
+                    display: none !important;
+                }
+                /* 隐藏侧边栏Logo（保留占位和点击） */
+                a.reset.interactable[href="/"]:has(use[href="#pplx-logo-mark"]) svg {
+                    visibility: hidden !important;
+                }
+                /* 隐藏侧边栏推广卡片（Slack等） */
+                .w-sidebarPinnedWidth:has(button[data-testid="sidebar-upsell-dismiss"]) {
+                    display: none !important;
+                }
+                /* 隐藏"已安排"按钮 */
+                button[aria-label="已安排"]:has(use[*|href="#pplx-icon-calendar-clock"]) {
+                    display: none !important;
+                }
                 /* 隐藏分享按钮 */
-                .pr-md .gap-x-sm.flex > div.transition-all:has(use[*|href="#pplx-icon-lock"]) {
+                .pr-md .gap-x-sm.flex > div.transition-all:has(use[*|href="#pplx-icon-lock"]),
+                div.transition-all:has(> span > button use[*|href="#pplx-icon-share-3"]) {
                     width: 0 !important;
                     overflow: hidden !important;
                     opacity: 0 !important;
@@ -463,11 +484,11 @@
                         let shareBtn;
 
                         if (isMobile) {
-                            // 移动端：寻找小图标分享按钮 (aria-label="分享" 或者工具栏中的分享按钮)
-                            shareBtn = document.querySelector('button[aria-label="分享"]:has(use[*|href="#pplx-icon-lock"])');
+                            shareBtn = document.querySelector('button[aria-label="分享"]:has(use[*|href="#pplx-icon-share-3"])') ||
+                                       document.querySelector('button[aria-label="分享"]:has(use[*|href="#pplx-icon-lock"])');
                         } else {
-                            // 桌面端：寻找分享按钮
-                            shareBtn = document.querySelector('.pr-md button.bg-button-bg:has(use[*|href="#pplx-icon-lock"])');
+                            shareBtn = document.querySelector('div.transition-all button:has(use[*|href="#pplx-icon-share-3"])') ||
+                                       document.querySelector('.pr-md button.bg-button-bg:has(use[*|href="#pplx-icon-lock"])');
                         }
 
                         if (shareBtn) {
