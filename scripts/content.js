@@ -411,6 +411,11 @@
                 .inline-flex.flex-none.rounded-full:has(button[aria-label="Computer"]) {
                     display: none !important;
                 }
+                /* 修正移除Computer后搜索模式切换背景宽度 */
+                .relative.flex.items-center.flex-shrink-0.gap-0.rounded-full.transition-colors.duration-quick.bg-subtle:has(button[aria-label="Computer"]) > [data-testid="ask-input-mode-toggle-indicator"] {
+                    width: 100% !important;
+                    transform: translateX(0) !important;
+                }
                 /* 隐藏侧边栏Logo（保留占位和点击） */
                 a.reset.interactable[href="/"]:has(use[href="#pplx-logo-mark"]) svg {
                     visibility: hidden !important;
